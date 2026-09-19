@@ -159,7 +159,7 @@ class SettingsPage(private val act: MainActivity) {
         card1.addView(Ui.field(c, "加班也计薪", setOvertime))
         card1.addView(Ui.caption(c).apply {
             text = "计薪时间 = 上班到下班、扣除午休；工作日默认周一至周五。数据保存在本机，不会上传。" })
-        fold(card1, "💼 收入与作息", open = true)
+        fold(card1, "💼 收入与作息", open = false)
         root.addView(card1)
 
         // ---- 五险一金 · 个税 ----
@@ -362,21 +362,30 @@ class SettingsPage(private val act: MainActivity) {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setPadding(0, 0, 0, Ui.dp(act, 12))
         }
-        val t = Ui.text(act, 13, Ui.SUB, true).apply {
-            text = titleText; letterSpacing = 0.08f
+        val t = Ui.text(act, 14, Ui.INK, true).apply {
+            text = titleText; letterSpacing = 0.02f
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
-        val arrow = Ui.text(act, 12, Ui.SUB, true).apply { text = if (open) "▾" else "▸" }
+        // 圆底箭头（对齐桌面端：22dp 圆形底 + ›，展开旋转 90°）
+        val chipBg = android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.OVAL
+            setColor(android.graphics.Color.parseColor("#F6EFE2"))
+        }
+        val arrow = Ui.text(act, 16, android.graphics.Color.parseColor("#A4917C"), true).apply {
+            text = "›"; gravity = android.view.Gravity.CENTER
+            background = chipBg
+            layoutParams = LinearLayout.LayoutParams(Ui.dp(act, 22), Ui.dp(act, 22))
+        }
         header.addView(t); header.addView(arrow)
         card.addView(header, 0)
         fun applyState(o: Boolean) {
             for (i in card.childCount - 1 downTo 1) card.getChildAt(i).visibility =
                 if (o) View.VISIBLE else View.GONE
-            arrow.text = if (o) "▾" else "▸"
+            arrow.rotation = if (o) 90f else 0f
         }
         applyState(open)
         header.setOnClickListener {
-            val nowOpen = arrow.text == "▾"
+            val nowOpen = arrow.rotation == 90f
             applyState(!nowOpen)
         }
     }

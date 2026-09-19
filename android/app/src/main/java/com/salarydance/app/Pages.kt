@@ -175,8 +175,9 @@ class TodayPage(private val act: MainActivity) {
         val tlCard = Ui.card(c)
         tlCard.addView(Ui.cardTitle(c, "今天的时间线"))
         tl = TimelineView(c).apply {
+            // 高度 = 轨道 10dp + 圆点上下溢出量（圆点直径 18dp + 描边）
             layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(c, 14))
+                ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(c, 24))
                 .apply { topMargin = Ui.dp(c, 6); bottomMargin = Ui.dp(c, 6) }
         }
         tlCard.addView(tl)
@@ -203,18 +204,20 @@ class TodayPage(private val act: MainActivity) {
         tlCard.addView(tlNow)
         root.addView(tlCard)
 
-        // ---- 统计行 ----
+        // ---- 统计行（卡片底 + 居中收紧，同步桌面端样式）----
+        val statsCard = Ui.card(c).apply {
+            setPadding(Ui.dp(c, 6), Ui.dp(c, 4), Ui.dp(c, 6), Ui.dp(c, 4))
+        }
         val stats = LinearLayout(c).apply {
             orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = Ui.dp(c, 14) }
+            gravity = Gravity.CENTER
         }
         monthEarned = statCell(c, stats, "本月已计薪")
         paydayLeft = statCell(c, stats, "距发工资")
         dayTotal = statCell(c, stats, "全天工资")
         leaveStat = statCell(c, stats, "年假（天）")
-        root.addView(stats)
+        statsCard.addView(stats)
+        root.addView(statsCard)
 
         // ---- 桌宠 dock ----
         val dock = Ui.card(c)
@@ -273,7 +276,9 @@ class TodayPage(private val act: MainActivity) {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(0, Ui.dp(c, 4), 0, Ui.dp(c, 4))
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { marginStart = Ui.dp(c, 11); marginEnd = Ui.dp(c, 11) }
         }
         val v = Ui.text(c, 15, Ui.INK, true).apply {
             gravity = Gravity.CENTER; Ui.ellipsize(this); text = "-" }

@@ -21,7 +21,8 @@ class TimelineView(c: Context) : View(c) {
 
     private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFEFE5D2.toInt() }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val lunch = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x59E6A23C.toInt() }
+    private val lunchBase = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xF2FFFDF7.toInt() }
+    private val lunchStripe = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x59E6A23C.toInt() }
     private val dotFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
     private val dotRing = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Ui.BRAND
@@ -49,32 +50,57 @@ class TimelineView(c: Context) : View(c) {
         super.onDraw(canvas)
         val w = width.toFloat()
         val h = height.toFloat()
-        val r = h / 2f
-        val rect = RectF(0f, 0f, w, h)
+        // 圆点直径约 2 倍轨道高：View 内预留圆点半径的左右/上下安全边距，
+        // 两端圆点完整可见且圆心严格落在轨道中轴上
+        val dotR = Ui.dp(context, 9).toFloat()
+        val ringW = Ui.dp(context, 2).toFloat()
+        val trackH = Ui.dp(context, 10).toFloat()
+        val top = (h - trackH) / 2f
+        val padX = dotR + ringW / 2f + 1f
+        val left = padX
+        val right = w - padX
+        val r = trackH / 2f
+        val rect = RectF(left, top, right, top + trackH)
 
         clipPath.reset()
         clipPath.addRoundRect(rect, r, r, Path.Direction.CW)
         canvas.drawRoundRect(rect, r, r, track)
 
         val span = (endMin - startMin).coerceAtLeast(1)
+        val trackW = right - left
         if (hasLunch && lunchB > lunchA) {
-            val x1 = w * (lunchA - startMin) / span
-            val x2 = w * (lunchB - startMin) / span
+            val x1 = left + trackW * (lunchA - startMin) / span
+            val x2 = left + trackW * (lunchB - startMin) / span
             canvas.save()
             canvas.clipPath(clipPath)
-            canvas.drawRect(x1, 0f, x2, h, lunch)
+            canvas.clipRect(x1, top, x2, top + trackH)
+            // 底色 + 45° 斜纹（对齐 PC 端 repeating-linear-gradient 样式）
+            canvas.drawRect(x1, top, x2, top + trackH, lunchBase)
+            val cxm = (x1 + x2) / 2f
+            val cym = top + trackH / 2f
+            canvas.save()
+            canvas.translate(cxm, cym)
+            canvas.rotate(-45f)
+            val reach = trackW + h
+            val period = Ui.dp(context, 10).toFloat()
+            val band = Ui.dp(context, 5).toFloat()
+            var x = -reach
+            while (x < reach) {
+                canvas.drawRect(x, -reach, x + band, reach, lunchStripe)
+                x += period
+            }
+            canvas.restore()
             canvas.restore()
         }
 
-        val fw = (w * pct).coerceAtLeast(h)
-        canvas.drawRoundRect(RectF(0f, 0f, fw, h), r, r, fill)
+        val fw = (trackW * pct).coerceAtLeast(trackH)
+        canvas.drawRoundRect(RectF(left, top, left + fw, top + trackH), r, r, fill)
 
-        val cx = w * pct
-        val cy = h / 2f
-        val dotR = h * 0.9f
-        dotRing.strokeWidth = Ui.dp(context, 2).toFloat()
-        canvas.drawCircle(cx, cy, dotR - dotRing.strokeWidth / 2f, dotFill)
-        canvas.drawCircle(cx, cy, dotR - dotRing.strokeWidth / 2f, dotRing)
+        val cx = left + trackW * pct
+        val cy = top + trackH / 2f
+        dotRing.strokeWidth = ringW
+        canvas.drawCircle(cx, cy, dotR - ringW / 2f, dotFill)
+        canvas.drawCircle(cx, cy, dotR - ringW / 2f, dotRing)
     }
 }
 
